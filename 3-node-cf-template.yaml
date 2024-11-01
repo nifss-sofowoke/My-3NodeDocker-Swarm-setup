@@ -1,0 +1,64 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: This template launches two Ubuntu t2-micro EC2 instance that allows all traffic from your IP address and installs & configures Docker
+
+Parameters:
+ MyIPAddress:
+    Type: String
+    Description: Your IP address for you to connect to the EC2 instance
+
+Resources:
+  DockerInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group that allows all inbound traffic (including SSH) from my IP address and Docker
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: !Ref MyIPAddress
+        - IpProtocol: -1
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: !Ref MyIPAddress
+        - IpProtocol: -1
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: !Ref MyIPAddress
+
+  Node2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-04b70fa74e45c3917  
+      InstanceType: t2.micro
+      KeyName: Nifss-Docker-KP
+      SecurityGroupIds:
+        - !GetAtt DockerInstanceSG.GroupId
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          curl -fsSL https://get.docker.com -o get-docker.sh 
+          sh get-docker.sh
+          groupadd docker
+          usermod -aG docker ubuntu
+          reboot
+
+  Node3: 
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-04b70fa74e45c3917  
+      InstanceType: t2.micro
+      KeyName: Nifss-Docker-KP
+      SecurityGroupIds:
+        - !GetAtt DockerInstanceSG.GroupId
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          curl -fsSL https://get.docker.com -o get-docker.sh 
+          sh get-docker.sh 
+          groupadd docker
+          usermod -aG docker ubuntu
+          reboot
